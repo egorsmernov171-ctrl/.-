@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>DRIFT ARENA — симулятор дрифта</title>
+<link rel="stylesheet" href="./css/style.css">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<meta name="theme-color" content="#ff2d55">
+<meta name="description" content="DRIFT ARENA — 3D симулятор дрифта: реалистичная физика, тюнинг, настройка графики.">
+<script type="importmap">
+{
+  "imports": {
+    "three": "/node_modules/three/build/three.module.js",
+    "three/addons/": "/node_modules/three/examples/jsm/"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+
+<!-- ===================== HUD ===================== -->
+<div id="hud" class="hidden">
+  <div id="hud-top">
+    <div id="mode-info">
+      <div id="mode-name">Свободная езда</div>
+      <div id="mode-sub"></div>
+    </div>
+    <div id="score-box">
+      <div class="lbl">ОЧКИ ДРИФТА</div>
+      <div id="score-total">0</div>
+      <div id="score-best">рекорд: 0</div>
+    </div>
+    <div id="timer-box">
+      <div class="lbl">ВРЕМЯ</div>
+      <div id="timer">0:00.00</div>
+      <div id="lap">круг 1/3</div>
+    </div>
+  </div>
+
+  <div id="drift-popup"></div>
+  <div id="center-msg"></div>
+
+  <div id="hud-bottom">
+    <div id="dash">
+      <canvas id="speedo" width="260" height="260"></canvas>
+      <div id="gear">N</div>
+      <div id="rpm-bar"><div id="rpm-fill"></div><div id="rpm-redline"></div></div>
+    </div>
+    <div id="car-name-tag"></div>
+  </div>
+
+  <div id="hud-left">
+    <div id="fps">60 FPS</div>
+    <div id="drift-meter"><div id="drift-fill"></div></div>
+    <div id="hints">W/S — газ/тормоз · A/D — руль · Space — ручник · R — сброс · C — камера · Tab — тюнинг · Esc — меню</div>
+  </div>
+
+  <div id="checkpoint-arrow">➤</div>
+</div>
+
+<!-- ===================== TOUCH ===================== -->
+<div id="touch" class="hidden">
+  <div id="touch-left">
+    <div class="tbtn" data-key="left">◀</div>
+    <div class="tbtn" data-key="right">▶</div>
+  </div>
+  <div id="touch-right">
+    <div class="tbtn tpedal" data-key="brake">ТОРМОЗ</div>
+    <div class="tbtn tpedal" data-key="gas">ГАЗ</div>
+    <div class="tbtn small" data-key="hb">РУЧНИК</div>
+  </div>
+</div>
+
+<!-- ===================== MAIN MENU ===================== -->
+<div id="menu" class="overlay">
+  <div class="menu-bg"></div>
+  <div class="menu-inner">
+    <h1 class="logo">DRIFT<span>ARENA</span></h1>
+    <p class="tagline">реалистичная физика · дрифт · тюнинг</p>
+    <div class="menu-buttons">
+      <button class="btn big" id="btn-play">ИГРАТЬ</button>
+      <button class="btn" id="btn-garage">ГАРАЖ</button>
+      <button class="btn" id="btn-settings">НАСТРОЙКИ</button>
+      <button class="btn" id="btn-controls">УПРАВЛЕНИЕ</button>
+      <button class="btn ghost hidden" id="btn-install">&#11015; УСТАНОВИТЬ КАК ПРИЛОЖЕНИЕ WINDOWS</button>
+    </div>
+    <div class="menu-foot">Совет: держите ручник (Space) и подтягивайте газ — машина пойдёт в занос.<br>
+      Tab — быстрый тюнинг прямо в игре.<br>
+      <b>Windows:</b> запусти <code>DRIFT-ARENA.bat</code> — или открой <code>DRIFT-ARENA.html</code> двойным кликом (работает без интернета).</div>
+  </div>
+</div>
+
+<!-- ===================== MODE SELECT ===================== -->
+<div id="modes" class="overlay hidden">
+  <div class="panel">
+    <h2>ВЫБОР РЕЖИМА</h2>
+    <div class="mode-list">
+      <button class="mode-card" data-mode="freeroam">
+        <b>СВОБОДНАЯ ЕЗДА</b>
+        <span>Большая карта: трек, скейд-пад, трамплины. Никаких правил.</span>
+      </button>
+      <button class="mode-card" data-mode="drift">
+        <b>ДРИФТ-ЗОНА</b>
+        <span>90 секунд на набор очков. Множитель растёт за длинный занос.</span>
+      </button>
+      <button class="mode-card" data-mode="time">
+        <b>TIME ATTACK</b>
+        <span>3 круга по трассе через контрольные точки. Лучшее время сохраняется.</span>
+      </button>
+    </div>
+    <div class="row">
+      <select id="car-select-menu" class="select"></select>
+    </div>
+    <button class="btn ghost" id="btn-modes-back">НАЗАД</button>
+  </div>
+</div>
+
+<!-- ===================== GARAGE ===================== -->
+<div id="garage" class="overlay hidden">
+  <div class="garage-ui">
+    <div class="garage-head">
+      <h2>ГАРАЖ</h2>
+      <div class="tabs">
+        <button class="tab active" data-tab="cars">Авто</button>
+        <button class="tab" data-tab="paint">Окраска</button>
+        <button class="tab" data-tab="tune">Тюнинг</button>
+      </div>
+      <button class="btn ghost" id="btn-garage-exit">ВЫХОД</button>
+    </div>
+
+    <div class="tab-page" data-page="cars">
+      <div class="car-grid" id="car-grid"></div>
+      <div class="car-specs" id="car-specs"></div>
+    </div>
+
+    <div class="tab-page hidden" data-page="paint">
+      <div class="paint-grid">
+        <div class="ctrl"><label>Цвет кузова</label><input type="color" id="paint-color" value="#d81f2a"></div>
+        <div class="ctrl"><label>Цвет дисков</label><input type="color" id="rim-color" value="#c8ccd2"></div>
+        <div class="ctrl"><label>Тип дисков</label>
+          <select id="rim-style" class="select">
+            <option value="mesh">Mesh (спицы)</option>
+            <option value="star">Star (5 спиц)</option>
+            <option value="deep">Deep dish</option>
+            <option value="work">Work (много спиц)</option>
+          </select>
+        </div>
+        <div class="ctrl"><label>Тонировка стекол</label>
+          <select id="tint" class="select">
+            <option value="0.06">Максимальная</option>
+            <option value="0.16" selected>Средняя</option>
+            <option value="0.35">Слабая</option>
+            <option value="0.55">Без тонировки</option>
+          </select>
+        </div>
+        <div class="ctrl"><label>Металлик</label><input type="range" id="paint-metal" min="0" max="1" step="0.01" value="0.6"></div>
+        <div class="ctrl"><label>Блеск лака</label><input type="range" id="paint-clear" min="0" max="1" step="0.01" value="1"></div>
+        <div class="ctrl"><label>Цвет суппорта</label><input type="color" id="caliper-color" value="#ffb400"></div>
+      </div>
+    </div>
+
+    <div class="tab-page hidden" data-page="tune">
+      <div class="tune-grid" id="tune-grid"></div>
+      <div class="tune-actions">
+        <button class="btn ghost" id="btn-tune-preset-drift">Пресет: ДРИФТ</button>
+        <button class="btn ghost" id="btn-tune-preset-grip">Пресет: GRIP</button>
+        <button class="btn ghost" id="btn-tune-reset">СБРОС</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SETTINGS ===================== -->
+<div id="settings" class="overlay hidden">
+  <div class="panel wide">
+    <h2 id="settings-title">НАСТРОЙКИ</h2>
+    <div class="settings-cols">
+      <div>
+        <h3>Графика</h3>
+        <div id="gfx-controls"></div>
+      </div>
+      <div>
+        <h3>Звук и камера</h3>
+        <div id="audio-controls"></div>
+        <h3>Управление</h3>
+        <div id="cam-controls"></div>
+      </div>
+    </div>
+    <button class="btn ghost" id="btn-settings-close">ГОТОВО</button>
+  </div>
+</div>
+
+<!-- ===================== CONTROLS HELP ===================== -->
+<div id="controls" class="overlay hidden">
+  <div class="panel">
+    <h2>УПРАВЛЕНИЕ</h2>
+    <table class="keys">
+      <tr><td><b>W</b> / <b>↑</b></td><td>Газ</td></tr>
+      <tr><td><b>S</b> / <b>↓</b></td><td>Тормоз / задний ход</td></tr>
+      <tr><td><b>A</b> / <b>D</b></td><td>Руль</td></tr>
+      <tr><td><b>Space</b></td><td>Ручник (блокировка задней оси)</td></tr>
+      <tr><td><b>Shift</b></td><td>Повысить передачу (ручной режим)</td></tr>
+      <tr><td><b>Ctrl</b> / <b>Z</b></td><td>Понизить передачу</td></tr>
+      <tr><td><b>C</b></td><td>Смена камеры</td></tr>
+      <tr><td><b>R</b></td><td>Респавн на трассе</td></tr>
+      <tr><td><b>Tab</b></td><td>Быстрый тюнинг</td></tr>
+      <tr><td><b>M</b></td><td>Звук вкл/выкл</td></tr>
+      <tr><td><b>Esc</b></td><td>Пауза / меню</td></tr>
+    </table>
+    <p class="note">Геймпад поддерживается: левый стик — руль, RT — газ, LT/X — тормоз, A — ручник.</p>
+    <button class="btn ghost" id="btn-controls-close">НАЗАД</button>
+  </div>
+</div>
+
+<!-- ===================== QUICK TUNE ===================== -->
+<div id="quicktune" class="overlay hidden">
+  <div class="panel">
+    <h2>БЫСТРЫЙ ТЮНИНГ</h2>
+    <div class="tune-grid" id="quick-tune-grid"></div>
+    <button class="btn ghost" id="btn-quicktune-close">ГОТОВО</button>
+  </div>
+</div>
+
+<!-- ===================== PAUSE ===================== -->
+<div id="pause" class="overlay hidden">
+  <div class="panel">
+    <h2>ПАУЗА</h2>
+    <div class="menu-buttons col">
+      <button class="btn big" id="btn-resume">ПРОДОЛЖИТЬ</button>
+      <button class="btn" id="btn-pause-settings">НАСТРОЙКИ</button>
+      <button class="btn" id="btn-pause-garage">В ГАРАЖ</button>
+      <button class="btn ghost" id="btn-pause-menu">В ГЛАВНОЕ МЕНЮ</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== RESULTS ===================== -->
+<div id="results" class="overlay hidden">
+  <div class="panel">
+    <h2 id="results-title">РЕЗУЛЬТАТ</h2>
+    <div id="results-body" class="results-body"></div>
+    <div class="menu-buttons col">
+      <button class="btn" id="btn-results-again">ЕЩЁ РАЗ</button>
+      <button class="btn ghost" id="btn-results-menu">В МЕНЮ</button>
+    </div>
+  </div>
+</div>
+
+<div id="loading"><div class="spinner"></div><div class="loading-text">Загрузка…</div></div>
+
+<script>
+// установка как приложение (PWA) + офлайн-режим при запуске через сервер
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+<script type="module" src="./js/main.js"></script>
+</body>
+</html>
