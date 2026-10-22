@@ -19,6 +19,7 @@
     "physics"
   ],
   "devDependencies": {
+    "@napi-rs/canvas": "^1.0.13",
     "esbuild": "^0.28.2"
   }
 }
