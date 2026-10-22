@@ -68,7 +68,7 @@ export function roadTexture(){
 }
 
 export function curbTexture(){
-  const c = canvas(64, 256), g = c.getContext('d');
+  const c = canvas(64, 256), g = c.getContext('2d');
   for(let y=0;y<256;y+=64){
     g.fillStyle = (y/64)%2 === 0 ? '#c8202c' : '#e8e8e6';
     g.fillRect(0, y, 64, 64);
