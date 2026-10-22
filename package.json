@@ -19,6 +19,6 @@
     "physics"
   ],
   "devDependencies": {
-    "esbuild": "^25"
+    "esbuild": "^0.28.2"
   }
 }
