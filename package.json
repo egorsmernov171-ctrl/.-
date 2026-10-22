@@ -7,7 +7,9 @@
   "description": "3D drift simulator on three.js",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:app": "node build.js",
+    "icons": "node tools/make-icons.js"
   },
   "keywords": [
     "drift",
@@ -15,5 +17,8 @@
     "three.js",
     "webgl",
     "physics"
-  ]
+  ],
+  "devDependencies": {
+    "esbuild": "^25"
+  }
 }

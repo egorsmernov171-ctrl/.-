@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>DRIFT ARENA — симулятор дрифта</title>
 <link rel="stylesheet" href="./css/style.css">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" href="./icon-192.png">
+<meta name="theme-color" content="#ff2d55">
+<meta name="description" content="DRIFT ARENA — 3D симулятор дрифта: реалистичная физика, тюнинг, настройка графики.">
 <script type="importmap">
 {
   "imports": {
@@ -81,8 +85,11 @@
       <button class="btn" id="btn-garage">ГАРАЖ</button>
       <button class="btn" id="btn-settings">НАСТРОЙКИ</button>
       <button class="btn" id="btn-controls">УПРАВЛЕНИЕ</button>
+      <button class="btn ghost hidden" id="btn-install">&#11015; УСТАНОВИТЬ КАК ПРИЛОЖЕНИЕ WINDOWS</button>
     </div>
-    <div class="menu-foot">Совет: держите ручник (Space) и подтягивайте газ — машина пойдёт в занос.<br>Tab — быстрый тюнинг прямо в игре.</div>
+    <div class="menu-foot">Совет: держите ручник (Space) и подтягивайте газ — машина пойдёт в занос.<br>
+      Tab — быстрый тюнинг прямо в игре.<br>
+      <b>Windows:</b> запусти <code>DRIFT-ARENA.bat</code> — или открой <code>DRIFT-ARENA.html</code> двойным кликом (работает без интернета).</div>
   </div>
 </div>
 
@@ -244,6 +251,12 @@
 
 <div id="loading"><div class="spinner"></div><div class="loading-text">Загрузка…</div></div>
 
+<script>
+// установка как приложение (PWA) + офлайн-режим при запуске через сервер
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  window.addEventListener('load', ()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
 <script type="module" src="./js/main.js"></script>
 </body>
 </html>

@@ -66,6 +66,22 @@ export class UI {
     $('btn-tune-preset-grip').onclick = ()=>this.applyPreset('grip');
     $('btn-tune-reset').onclick = ()=>this.applyPreset('stock');
 
+    // установка как приложение (PWA, Chrome/Edge)
+    let installEvent = null;
+    window.addEventListener('beforeinstallprompt', (e)=>{
+      e.preventDefault();
+      installEvent = e;
+      $('btn-install').classList.remove('hidden');
+    });
+    $('btn-install').onclick = async ()=>{
+      if(!installEvent) return;
+      installEvent.prompt();
+      try{ await installEvent.userChoice; }catch(err){}
+      installEvent = null;
+      $('btn-install').classList.add('hidden');
+    };
+    window.addEventListener('appinstalled', ()=>$('btn-install').classList.add('hidden'));
+
     document.querySelectorAll('.tab').forEach(tab=>{
       tab.onclick = ()=>{
         document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
