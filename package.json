@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "name": "drift-arena",
+  "version": "1.0.0",
+  "description": "3D drift simulator on three.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "drift",
+    "game",
+    "three.js",
+    "webgl",
+    "physics"
+  ]
+}
